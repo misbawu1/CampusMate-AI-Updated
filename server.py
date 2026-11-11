@@ -82,6 +82,7 @@ class CampusMateHandler(SimpleHTTPRequestHandler):
             )
             self._start_event_stream()
             self._send_event({"type": "status", "message": "CampusMate is checking resources and asking Gemini…"})
+            print("Gemini request started.", flush=True)
 
             client = genai.Client()
             stream = client.interactions.create(
@@ -105,6 +106,7 @@ class CampusMateHandler(SimpleHTTPRequestHandler):
                     self._send_event({"type": "text", "text": delta.text})
                     got_text = True
                 elif event_type in {"error", "interaction.error"}:
+                    print(f"Gemini stream error event: {event_type}", flush=True)
                     self._send_event({"type": "error", "message": "Gemini couldn't finish the answer. Please try again."})
                     return
                 elif event_type == "interaction.completed":
@@ -123,12 +125,17 @@ class CampusMateHandler(SimpleHTTPRequestHandler):
             else:
                 print(
                     "Gemini stream finished without answer text. "
-                    f"Status: {final_status}; events: {', '.join(sorted(event_types))}"
+                    f"Status: {final_status}; events: {', '.join(sorted(event_types))}",
+                    flush=True,
                 )
                 self._send_event({"type": "error", "message": "Gemini returned no answer. Please try again."})
         except Exception as error:
-            print(f"Gemini request failed: {type(error).__name__}")
-            self._send_event({"type": "error", "message": "CampusMate couldn't get an AI answer. Check the VS Code terminal and try again."})
+            status_code = getattr(error, "status_code", None) or getattr(error, "code", None)
+            print(
+                f"Gemini request failed: {type(error).__name__}; status={status_code}",
+                flush=True,
+            )
+            self._send_event({"type": "error", "message": "CampusMate couldn't get an AI answer. Please try again later."})
 
     def _start_event_stream(self):
         self.send_response(200)

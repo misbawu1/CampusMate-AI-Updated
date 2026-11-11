@@ -1,4 +1,4 @@
-"""Serve the CampusMate browser app on this computer and open it."""
+"""Serve the CampusMate browser app locally or on a hosted service."""
 
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
@@ -11,8 +11,6 @@ import webbrowser
 from tools import find_relevant_resources, load_knowledge
 
 
-HOST = "127.0.0.1"
-PORT = 8000
 PROJECT_FOLDER = Path(__file__).resolve().parent
 MODEL = "gemini-3.5-flash-lite"
 SYSTEM_INSTRUCTION = (
@@ -156,14 +154,22 @@ class CampusMateHandler(SimpleHTTPRequestHandler):
 
 def main():
     handler = partial(CampusMateHandler, directory=str(PROJECT_FOLDER))
+    hosted_port = os.environ.get("PORT")
+    host = "0.0.0.0" if hosted_port else "127.0.0.1"
+    port = int(hosted_port) if hosted_port else 8000
     try:
-        server = ThreadingHTTPServer((HOST, PORT), handler)
+        server = ThreadingHTTPServer((host, port), handler)
     except OSError:
-        server = ThreadingHTTPServer((HOST, 0), handler)
-    address = f"http://{HOST}:{server.server_port}/"
-    print(f"CampusMate is open at {address}")
-    print("Keep this window open while you use CampusMate. Press Ctrl+C to stop it.")
-    threading.Timer(0.7, lambda: webbrowser.open(address)).start()
+        if hosted_port:
+            raise
+        server = ThreadingHTTPServer((host, 0), handler)
+    if hosted_port:
+        print(f"CampusMate is listening on {host}:{server.server_port}")
+    else:
+        address = f"http://127.0.0.1:{server.server_port}/"
+        print(f"CampusMate is open at {address}")
+        print("Keep this window open while you use CampusMate. Press Ctrl+C to stop it.")
+        threading.Timer(0.7, lambda: webbrowser.open(address)).start()
     try:
         server.serve_forever()
     except KeyboardInterrupt:

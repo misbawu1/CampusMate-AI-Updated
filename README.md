@@ -13,6 +13,12 @@ A beginner-friendly campus guide with a browser resource search, an optional Gem
 
 If Windows does not recognize `python` in an already-open terminal, open a new terminal or restart VS Code. As a fallback, run `& "$env:LOCALAPPDATA\Programs\Python\Python314\python.exe" -m pip install -r requirements.txt` and then `& "$env:LOCALAPPDATA\Programs\Python\Python314\python.exe" server.py` in PowerShell.
 
+## Publish the browser app on Render
+
+The repository includes a `render.yaml` Blueprint. In Render, create a Blueprint from the `misbawu1/CampusMate-AI-Updated` repository and follow the prompts. When asked for `GEMINI_API_KEY`, enter it in Render's secure environment-variable form; never add it to GitHub or this file. The Blueprint uses Render's free web-service plan for this learning project.
+
+Render's free web services sleep after 15 minutes without traffic and can take about a minute to wake up. Free services are intended for testing and hobby projects, not production use.
+
 ## Ask CampusMate with Gemini
 
 1. Create a Gemini API key in [Google AI Studio](https://aistudio.google.com/apikey).
